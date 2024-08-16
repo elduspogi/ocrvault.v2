@@ -1,0 +1,220 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Users - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">User List</h1>
+    <p>All admin, reviewer, and staff will be displayed here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card card-dashboard mb-5" id="newVersionTable">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="myTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <th>{{ user.id }}</th>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.user_type }}</td>
+                            <td>
+                                {% if not user == request.user %}
+                                <button class="accept-button" data-id="{{ user.id }}" data-email="{{ user.email }}" data-name="{{ user.name }}" data-role="{{ user.user_type }}" data-date-joined="{{ user.date_joined }}" data-last-login="{{ user.last_login }}">View</button>
+                                    {% if request.user.user_type == 'SUPERADMIN' and user.user_type == 'ADMIN' or user.user_type == 'STAFF' or user.user_type == 'REVIEWER' %}
+                                <button class="remove-button" data-id="{{ user.id }}">Delete</button>
+                                    {% elif request.user.user_type == 'ADMIN' and user.user_type == 'STAFF' or user.user_type == 'REVIEWER' %}
+                                <button class="remove-button" data-id="{{ user.id }}">Delete</button>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal report-modal" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">User Information</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="userId">USER ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="userId" disabled>
+                        </div>
+                        <div class="col-lg-12">
+                            <label for="userEmail">EMAIL</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="userEmail" disabled>
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="userName">NAME</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="userName" disabled>
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="userRole">ROLE</label>
+                            <!-- <input class="form-control folder-form-input" type="text" autocomplete="off" id="userRole" disabled> -->
+                             <select class="form-select folder-form-input" id="userRole">
+                                <option value="STAFF" id="s">STAFF</option>
+                                <option value="REVIEWER" id="r">REVIEWER</option>
+                                <option value="ADMIN" id="a">ADMIN</option>
+                                <option value="SUPERADMIN" id="sa">SUPERADMIN</option>
+                             </select>
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="dateJoined">DATE JOINED</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="dateJoined" disabled>
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="lastLogin">LAST LOGIN</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="lastLogin" disabled>
+                        </div>
+                        <div class="col-lg-12">
+                            <button type="submit" class="btn submit-button mt-3 mb-2 hide">SAVE CHANGES</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal delete-modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Delete user</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <p class="report-text">Are you sure you want to delete this user? This is irreversible.</p>
+                    <input type="hidden" name="id">
+                    <input type="hidden" name="delete">
+                    <div class="d-flex justify-content-between folder-settings mb-3">
+                        <button class="cancel-button" data-dismiss="modal" aria-label="Close">CANCEL
+                        </button>
+                        <button class="confirm-button" type="submit">CONFIRM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var userId;
+        $('.remove-button').on('click', function () {
+            $('#deleteModal').modal('show');
+            userId = $(this).data('id');
+        });
+
+        $('.accept-button').on('click', function () {
+            $('.report-modal').modal('show');
+
+            $('#userId').val($(this).data('id'));
+            $('#userEmail').val($(this).data('email'));
+            $('#userName').val($(this).data('name'));
+            var role = $('#userRole').val($(this).data('role'));
+            var prevRole = $(this).data('role');
+            $('#dateJoined').val($(this).data('date-joined'));
+            $('#lastLogin').val($(this).data('lastLogin'));
+
+            $('#userRole').on('change', function () {
+                var currentRole = $(this).val();
+
+                if (currentRole === 'STAFF') {
+                    $('#s').attr('selected', 'selected');
+                } else if (currentRole === 'REVIEWER') {
+                    $('#r').attr('selected', 'selected');
+                } else if (currentRole === 'ADMIN') {
+                    $('#a').attr('selected', 'selected');
+                } else if (currentRole === 'SUPERADMIN') {
+                    $('#sa').attr('selected', 'selected');
+                }
+
+                if (currentRole === prevRole) {
+                    $('.submit-button').addClass('hide');
+                } else {
+                    $('.submit-button').removeClass('hide');
+                }
+
+                $('.submit-button').click(function (e) {
+                    e.preventDefault();
+
+                    $(this).prop('disabled', true).text('PLEASE WAIT...');
+
+                    var data = {
+                        'userId': $('#userId').val(),
+                        'role': currentRole
+                    }
+
+                    $.ajax({
+                        url: '/role/edit',
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': $('meta[name=csrf-token]').attr('content')
+                        },
+                        data: JSON.stringify(data),
+                        success: function (response) {
+                            location.reload();
+                        }
+                    })
+                });
+            });
+        });
+
+        $('.bi-x-lg').on('click', function () {
+            $('.modal').modal('hide');
+        });
+
+        $('.cancel-button').on('click', function (e) {
+            e.preventDefault();
+            $('.modal').modal('hide');
+        });
+
+        $('.confirm-button').on('click', function (e) {
+            e.preventDefault();
+
+            $(this).prop('disabled', true).text('PLEASE WAIT...');
+            
+            var data = {
+                'userId': userId,
+            };
+
+            $.ajax({
+                url: '/user/delete',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': $('meta[name=csrf-token]').attr('content')
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    location.reload();
+                }
+            })
+        })
+    });
+</script>
+{% endblock %}

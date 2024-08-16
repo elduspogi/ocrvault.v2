@@ -1,0 +1,178 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block title %}Home - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <div class="container mb-3 search-form-container d-flex justify-content-center">
+        <form class="search-form">
+            <div class="custom-input-group">
+                <input type="text" class="form-control" placeholder="Search in OCRVault" name="keyword" id="keyword">
+                <input type="hidden" name="id">
+                <i class="bi bi-search"></i>
+            </div>
+        </form>
+    </div>
+
+    <div class="container d-inline-flex justify-content-between mb-3 align-items-center">
+        <div class="home-breadcrumb">
+        </div>
+        <div class="new-folder d-inline-flex justify-content-center" data-bs-toggle="modal"
+            data-bs-target="#newFolderModal" id="newFolderFormButton">
+            <i class="bi bi-plus-lg"></i>
+            <h6>New</h6>
+        </div>
+    </div>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card dms-card">
+        <div class="card-body">
+            {% include 'components/settings.html' %}
+
+            <div class="row folder-row" id="isoContainer">
+                {% if root_folders or private_folders %}
+                {% for folder in root_folders %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 root-folder folder-link folder-entity"
+                    data-id="{{ folder.id }}" data-kind="{{ folder.kind }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center"
+                        data-id="{{ folder.id }}">
+                        <i class="bi bi-folder-fill"></i>
+                        <h6 class="folder-name">{{ folder.name }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% for folder in private_folders %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 root-folder folder-link folder-entity"
+                    data-id="{{ folder.id }}" data-kind="{{ folder.kind }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center"
+                        data-id="{{ folder.id }}">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <h6 class="folder-name">{{ folder.name }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="alert-text text-center mt-5">Nothing to show.</p>
+                {% endif %}
+                {% for folder in folders %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 folder-link folder-entity hide global-folder"
+                    data-id="{{ folder.id }}" data-kind="{{ folder.kind }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center">
+                        <i class="bi bi-folder-fill"></i>
+                        <h6 class="folder-name">{{ folder.name }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% for document in documents %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 document-link document-entity hide global-document"
+                    data-id="{{ document.id }}" data-kind="{{ document.kind }}" data-path="{{ document.file.url }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center">
+                        <i class="bi bi-file-text-fill"></i>
+                        <h6>{{ document.title }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div class="d-flex justify-content-center align-items-center spin-container hide">
+    <div>
+        <div class="spinner-border text-success mb-3" role="status"></div>
+        <h6>Please wait...</h6>
+    </div>
+</div>
+
+<!-- Add Folder Modal -->
+<div class="modal fade" id="newFolderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">
+                    New Folder
+                </h1>
+                <i class="bi bi-x-lg" data-bs-dismiss="modal" aria-label="Close"></i>
+            </div>
+            {% include 'components/folder-create.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Move Modal -->
+<div class="modal move-modal" id="moveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Move selected items</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="card card-dashboard" id="newVersionTable">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="myTable" class="display w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Id</th>
+                                            <th>Name</th>
+                                            <th>Owner</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for folder in all_folders %}
+                                        <tr class="version-row" data-id="{{ folder.id }}">
+                                            <th>{{ folder.id }}</th>
+                                            <td>{{ folder.name }}</td>
+                                            <td>{{ folder.created_by.name }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = $('meta[name=csrf-token]').attr('content');
+        const url = `${window.location.protocol}//${window.location.host}`;
+        var isPrivate = '{{ folder.type }}' === 'PRIVATE';
+        var folderId = '{{ folder.id }}';
+        var parentId = '{{ folder.parent.id }}';
+        
+        if (isPrivate) {
+            $('#folderCheckbox').attr('checked', 'checked');
+            $('#folderValue').val('PRIVATE');
+        }
+
+        $('#newFolderFormInput').on('input', function () {
+            var value = $(this).val();
+            $('#folderName').text(value);
+        });
+
+        $('#folderCheckbox').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#folderType').text('PRIVATE');
+                $('#folderValue').val('PRIVATE');
+            } else {
+                $('#folderType').text('PUBLIC');
+                $('#folderValue').val('PUBLIC');
+            }
+        });
+    });
+</script>
+{% endblock content %}

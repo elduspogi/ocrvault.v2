@@ -1,0 +1,111 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Review Folders - OCRVault{% endblock %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Review Folders</h1>
+    <p>Review created folders here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card card-dashboard mb-5">
+        <div class="card-body">
+            <div class="table-responsive f-table">
+                <table id="folTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Owner</th>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for folder in folders %}
+                        <tr>
+                            <th>{{ folder.id }}</th>
+                            <td>{{ folder.name }}</td>
+                            <td>{{ folder.type }}</td>
+                            <td>{{ folder.created_by.name }}</td>
+                            <td>{{ folder.created_at }}</td>
+                            <td>
+                                <button class="accept-button" data-id="{{ folder.id }}"
+                                    data-kind="{{ folder.kind }}">Accept</button>
+                                <button class="remove-button" data-id="{{ folder.id }}"
+                                    data-kind="{{ folder.kind }}">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#folder').click(function () {
+            $(this).addClass('active');
+            $('#document').removeClass('active');
+            $('.f-table').removeClass('hide');
+            $('.d-table').addClass('hide');
+        });
+
+        $('#document').click(function () {
+            $(this).addClass('active');
+            $('#folder').removeClass('active');
+            $('.f-table').addClass('hide');
+            $('.d-table').removeClass('hide');
+        });
+
+        $('.accept-button').click(function () {
+            var id = $(this).data('id');
+            var kind = $(this).data('kind');
+
+            var data = {
+                'id': id,
+                'kind': kind
+            }
+            $.ajax({
+                url: '/review/accept',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.reload();
+                }
+            })
+        });
+
+        $('.remove-button').click(function () {
+            var id = $(this).data('id');
+            var kind = $(this).data('kind');
+
+            if (kind === 'FOLDER') {
+                var data = {
+                    'id': id,
+                    'kind': kind
+                }
+
+                $.ajax({
+                    url: '/reviewer/remove',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        window.location.reload();
+                    }
+                })
+            }
+        })
+    });
+</script>
+{% endblock %}

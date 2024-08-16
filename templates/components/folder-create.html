@@ -1,0 +1,15 @@
+<form id="createFolder" class="folder-form">
+    {% csrf_token %}
+    <div class="modal-body">
+        <div class="container">
+            <input type="hidden" name="parent" value="{{ folder.id }}">
+            <input class="form-control folder-form-input" type="text" placeholder="Name" name="name"
+                id="newFolderFormInput" autocomplete="off">
+            <select class="form-select folder-form-input" name="type">
+                <option value="PUBLIC" selected>PUBLIC</option>
+                <option value="PRIVATE">PRIVATE</option>
+            </select>
+            <button type="submit" class="btn submit-button mt-3" id="createBtn">SUBMIT</button>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,16 @@
+<form class="edit-send-form">
+    {% csrf_token %}
+    <div class="container">
+        <input class="form-control folder-form-input" type="text" placeholder="Name" name="name"
+            id="newFolderFormInput">
+        <div class="checkbox-container d-inline-flex justify-content-start mt-3">
+            <input type="checkbox" id="folderCheckbox" class="error folder-checkbox">
+            <input type="hidden" id="folderIdInput" name="edit_folder">
+            <input type="hidden" name="type" id="folderValue" class="folder-value">
+            <label class="form-check-label" for="flexCheckDefault">
+                PRIVATE
+            </label>
+        </div>
+        <button type="submit" class="btn submit-button mb-3">SUBMIT</button>
+    </div>
+</form>

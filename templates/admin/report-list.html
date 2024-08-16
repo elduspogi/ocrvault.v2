@@ -1,0 +1,177 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Reports - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Reports</h1>
+    <p>All user reports will be displayed here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card card-dashboard mb-5" id="newVersionTable">
+        <div class="card-body">
+            <div class="table-responsive w-100">
+                <table id="myTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Reported By</th>
+                            <th>Reason</th>
+                            <th>Details</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <th>{{ report.id }}</th>
+                            <td>{{ report.user.name }}</td>
+                            <td>{{ report.type }}</td>
+                            <td>
+                                <button class="accept-button view-button" data-id="{{ report.id }}" data-kind="{{ report.kind }}" data-type-id="{{ report.type_id }}" data-reason="{{ report.type }}" data-date="{{ report.created_at }}"
+                                    data-details="{{ report.details }}">View</button>
+                            </td>
+                            <td>
+                                <button class="accept-button" id="acceptBtn" data-id="{{ report.id }}"
+                                    data-folder="{{ report.folder.id }}"
+                                    data-document="{{ report.document.id }}" data-type-id="{{ report.type_id }}" data-kind="{{ report.kind }}">Accept</button>
+                                <button class="remove-button" data-id="{{ report.id }}"
+                                    data-folder="{{ report.folder.id }}"
+                                    data-document="{{ report.document.id }}">Ignore</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal report-modal" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Report Details</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="reportId">REPORT ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="reportId" disabled>
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="reportType">TYPE</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="reportType" disabled>
+                        </div>
+                        <div class="col-lg-8">
+                            <label for="reportTypeId">ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="reportTypeId" disabled>
+                        </div>
+                        <div class="col-lg-12">
+                            <label for="reportReason">REASON</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="reportReason" disabled>
+                        </div>
+                        <div class="col-lg-12">
+                            <label for="reportTextInput">DETAILS</label>
+                            <textarea class="form-control folder-form-input" id="reportTextInput" name="details" rows="1"
+                            disabled></textarea>
+                        </div>
+                        <div class="col-lg-12">
+                            <label for="reportDate">REPORTED AT</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="reportDate" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal accept-modal" id="acceptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Accept Report</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <p class="alert-text text-center">Are you sure you want to accept this report? This will delete the
+                        folders and its associated contents.</p>
+                    <div class="d-flex justify-content-between folder-settings mb-3">
+                        <button class="cancel-button" data-dismiss="modal" aria-label="Close">CANCEL
+                        </button>
+                        <button class="confirm-button" type="submit">CONFIRM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.cancel-button').click(function () {
+            $('.modal').modal('hide');
+        });
+
+        $('.view-button').click(function () {
+            $('#reportModal').modal('show');
+            var details = $(this).data('details');
+            $('#reportTextInput').val(details);
+            $('#reportId').val($(this).data('id'));
+            $('#reportType').val($(this).data('kind'));
+            $('#reportTypeId').val($(this).data('type-id'));
+            $('#reportReason').val($(this).data('reason'));
+            $('#reportDate').val($(this).data('date'));
+        });
+
+        $('#acceptBtn').click(function () {
+            $('.accept-modal').modal('show');
+        });
+
+        $('.confirm-button').click(function () {
+            $(this).prop('disabled', true).text('PLEASE WAIT...');
+            var data = {
+                'reportId': $('#acceptBtn').data('id'),
+                'typeId': $('#acceptBtn').data('type-id'),
+                'kind': $('#acceptBtn').data('kind')
+            }
+            $.ajax({
+                url: '/report/accept',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.reload();
+                }
+            })
+        });
+
+        $('.remove-button').click(function () {
+            var data = {
+                'reportId': $(this).data('id')
+            }
+
+            $.ajax({
+                url: '/report/ignore',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.reload();
+                }
+            })
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block title %}{{ folder.name }} - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <div class="container mb-3 search-form-container d-flex justify-content-center">
+        <form class="search-form">
+            <div class="custom-input-group">
+                <input type="text" class="form-control" placeholder="Search in {{ folder.name }}" name="keyword"
+                    id="keyword">
+                <input type="hidden" name="id" value="{{ folder.id }}" id="id">
+                <i class="bi bi-search"></i>
+            </div>
+        </form>
+    </div>
+
+    <div class="container d-inline-flex justify-content-between mb-3 align-items-center">
+        <div class="home-breadcrumb">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    {% for ancestor in folder_path %}
+                    {% if ancestor.id == folder.id %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ folder.name }}</li>
+                    {% else %}
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'folder' folder_id=ancestor.id %}">
+                            {{ ancestor.name }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ol>
+            </nav>
+        </div>
+        <div class="new-folder d-inline-flex justify-content-center" data-bs-toggle="modal"
+            data-bs-target="#newFolderModal" id="newFolderFormButton">
+            <i class="bi bi-plus-lg"></i>
+            <h6>New</h6>
+        </div>
+    </div>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card dms-card">
+        <div class="card-body">
+            {% include 'components/settings.html' %}
+
+            {% if folders or documents %}
+            <div class="row folder-row" id="isoContainer">
+                {% for folder in folders %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 folder-link folder-entity global-folder"
+                    data-id="{{ folder.id }}" data-kind="{{ folder.kind }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center"
+                        data-id="{{ folder.id }}">
+                        {% if folder.type == 'PUBLIC' %}
+                        <i class="bi bi-folder-fill"></i>
+                        {% else %}
+                        <i class="bi bi-shield-lock-fill"></i>
+                        {% endif %}
+                        <h6 class="folder-name">{{ folder.name }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% for document in documents %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 document-link document-entity global-document"
+                    data-id="{{ document.id }}" data-kind="{{ document.kind }}" data-path="{{ document.file.url }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center">
+                        <i class="bi bi-file-text-fill"></i>
+                        <h6>{{ document.title }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="alert-text text-center m-5">Nothing to show.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Create Modal -->
+<div class="modal" id="newFolderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="container">
+                    <div
+                        class="new-choice folder folder-label-select d-inline-flex justify-content-center align-items-center">
+                        <i class="bi bi-check-lg add-folder-label-icon"></i>
+                        <h6>Folder</h6>
+                    </div>
+                    <div class="new-choice document d-inline-flex justify-content-center align-items-center">
+                        <i class="bi bi-file-text-fill add-document-label-icon"></i>
+                        <h6>Document</h6>
+                    </div>
+                </div>
+                <i class="bi bi-x-lg" data-bs-dismiss="modal" aria-label="Close"></i>
+            </div>
+            {% include 'components/folder-create.html' %}
+
+            {% include 'components/dropzone-style.html' %}
+
+            <form action="{% url 'upload' %}" class="dropzone document-form hide" id="dz" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="folder_id" value="{{ folder.id }}">
+                <div class="fallback">
+                    <input name="file" type="file" accept=".jpg, .jpeg, .png, .pdf" multiple />
+                </div>
+            </form>
+            <div class="container mb-2">
+                <p class="alert-text text-end fst-italic hide">Supported file types are<span class="refresh-page">  PNG, JPEG, JPG, and PDF </span>files.</p>
+                <p class="alert-text text-end fst-italic hide">Please <span class="refresh-page" id="refreshPage">refresh</span> the page upon finish of the upload.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move Modal -->
+<div class="modal move-modal" id="moveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Move selected items</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="card card-dashboard" id="newVersionTable">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="myTable" class="display w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Id</th>
+                                            <th>Name</th>
+                                            <th>Owner</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for folder in all_folders %}
+                                        <tr class="version-row" data-id="{{ folder.id }}">
+                                            <th>{{ folder.id }}</th>
+                                            <td>{{ folder.name }}</td>
+                                            <td>{{ folder.created_by.name }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

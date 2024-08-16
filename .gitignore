@@ -1,0 +1,6 @@
+venv
+.env
+ocrvault.json
+media
+*.pyc
+*pyo

@@ -1,0 +1,57 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Archives - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Archives</h1>
+    <p>All uploaded documents will be displayed here.</p>
+
+    <div class="card card-dashboard mb-5" id="newVersionTable">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="myTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>User</th>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                        <tr class="log">
+                            <th>{{ document.id }}</th>
+                            <td data-name="{{ document.file }}" class="documentUrl"></td>
+                            <td>{{ document.created_by.name }}</td>
+                            <td>{{ document.created_at }}</td>
+                            <td>
+                                <button class="accept-button view-button" data-url="{{ document.file }}">View</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="{% url 'download_archive' %}" class="btn submit-button mt-3">DOWNLOAD ALL FILES</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.documentUrl').each(function () {
+            var url = $(this).data('name').replace('archives/', '');
+
+            $(this).text(url);
+        });
+
+        $('.view-button').click(function () {
+            var url = $(this).data('url');
+            window.location.href = `media/${url}`;
+        });
+    });
+</script>
+{% endblock %}

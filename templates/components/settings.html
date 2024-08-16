@@ -1,0 +1,50 @@
+<div class="container sort-settings">
+    <div class="folder-label folder-label-select d-inline-flex" id="allLabel">
+        <i class="bi bi-check-lg eye-label-icon"></i>
+        <h6 class="sort-label">All</h6>
+    </div>
+    <div class="folder-label d-inline-flex" id="folderLabel">
+        <i class="bi bi-folder-fill folder-label-icon"></i>
+        <h6 class="sort-label">Folders</h6>
+    </div>
+    <div class="folder-label d-inline-flex" id="documentLabel">
+        <i class="bi bi-file-text-fill document-label-icon"></i>
+        <h6 class="sort-label">Documents</h6>
+    </div>
+    <div class="folder-label d-inline-flex" id="ascLabel">
+        <i class="bi bi-chevron-double-up" id="ascIcon"></i>
+        <h6 class="sort-label" id="ascText">Asc</h6>
+    </div>
+</div>
+
+<div class="container select-settings hide">
+    <div class="settings-icon" id="settingBtn">
+        <i class="bi bi-x-lg"></i>
+    </div>
+    <div class="settings-text">
+        <span id="selectedCount"></span> selected
+    </div>
+    <div class="settings-icon" id="deleteSelectedBtn" title="Delete">
+        <i class="bi bi-trash"></i>
+    </div>
+    {% if not request.path == '/home' %}
+    <div class="settings-icon" id="moveBtn" title="Move" data-current-id="{{ folder.id }}">
+        <i class="bi bi-arrows-move"></i>
+    </div>
+    <div class="settings-icon" id="selectAllBtn" title="Select All">
+        <i class="bi bi-check2-all"></i>
+    </div>
+    <div class="settings-icon" id="extractBtn" title="Extract Text">
+        <i class="bi bi-card-text"></i>
+    </div>
+    {% endif %}
+</div>
+
+<div class="container hide" id="messageContainer">
+    <div id="alerts-container">
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}"
+            role="alert" id="messages">
+            {{ message }}
+        </div>
+    </div>
+</div>

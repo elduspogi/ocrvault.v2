@@ -1,0 +1,96 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Review Documents - OCRVault{% endblock %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Review Documents</h1>
+    <p>Review uploaded documents here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card card-dashboard mb-5">
+        <div class="card-body">
+            <div class="table-responsive d-table">
+                <table id="docTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Owner</th>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                        <tr>
+                            <th>{{ document.id }}</th>
+                            <td>{{ document.title }}</td>
+                            <td>{{ document.type }}</td>
+                            <td>{{ document.created_by.name }}</td>
+                            <td>{{ document.created_at }}</td>
+                            <td>
+                                <a href="{{ document.file.url }}" class="open-btn" target="_blank">Open</a>
+                                <button class="accept-button" data-id="{{ document.id }}"
+                                    data-kind="{{ document.kind }}">Accept</button>
+                                <button class="remove-button" data-id="{{ document.id }}"
+                                    data-kind="{{ document.kind }}">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.accept-button').click(function () {
+            var id = $(this).data('id');
+            var kind = $(this).data('kind');
+
+            var data = {
+                'id': id,
+                'kind': kind
+            }
+            $.ajax({
+                url: '/review/accept',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.reload();
+                }
+            });
+        });
+
+        $('.remove-button').click(function () {
+            var id = $(this).data('id');
+            var kind = $(this).data('kind');
+
+            var data = {
+                'id': id,
+                'kind': kind
+            }
+
+            $.ajax({
+                url: '/reviewer/remove',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.reload();
+                }
+            })
+        })
+    });
+</script>
+{% endblock %}

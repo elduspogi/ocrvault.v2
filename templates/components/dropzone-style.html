@@ -1,0 +1,78 @@
+<style>
+    /* DROPZONE STYLES */
+    .dropzone {
+        border: 3px dashed rgba(var(--bs-dark-rgb));
+        margin: 10px;
+        min-height: 300px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        border-radius: 10px;
+        color: rgba(var(--bs-dark-rgb));
+    }
+
+    .dropzone:hover {
+        background-color: rgba(0, 34, 255, 0.062);
+    }
+
+    .dropzone .dz-button {
+        background-color: transparent !important;
+        border: none;
+        color: rgba(var(--bs-dark-rgb)) !important;
+        font-size: 14px;
+    }
+
+    .dropzone .dz-preview {
+        margin: 10px !important;
+        background-color: transparent !important;
+        flex-basis: calc(10% - 20px);
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .dz-image {
+        border-radius: 10px;
+        border: 5px solid rgba(var(--bs-dark-rgb));
+    }
+
+    .dropzone img {
+        width: 100% !important;
+        border-radius: none !important;
+    }
+
+    .dropzone .dz-preview .dz-details {
+        text-align: center;
+        flex: 1;
+    }
+
+    .dropzone .dz-preview .dz-size {
+        font-size: 12px;
+    }
+
+    .dropzone .dz-preview .dz-remove {
+        margin-top: 10px;
+        cursor: pointer;
+        color: #dc3545;
+    }
+
+    .dz-error-message {
+        display: none !important;
+    }
+
+    .dz-error-mark path {
+        fill: red !important;
+    }
+
+    .dz-success-mark path {
+        fill: rgba(var(--bs-dark-rgb)) !important;
+    }
+
+    .dz-white-mark path {
+        fill: green !important;
+    }
+</style>

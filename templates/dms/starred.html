@@ -1,0 +1,49 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Starred - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Starred</h1>
+    <p>All starred files will be displayed here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card dms-card">
+        <div class="card-body">
+            {% include 'components/settings.html' %}
+            <div class="row folder-row" id="isoContainer">
+                {% if folders or documents %}
+                {% for folder in folders %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 root-folder folder-link folder-entity"
+                    data-id="{{ folder.id }}" data-kind="{{ folder.kind }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center"
+                        data-id="{{ folder.id }}">
+                        {% if folder.type == 'PUBLIC' %}
+                        <i class="bi bi-folder-fill"></i>
+                        {% else %}
+                        <i class="bi bi-shield-lock-fill"></i>
+                        {% endif %}
+                        <h6 class="folder-name">{{ folder.name }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% for document in documents %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-2 document-link document-entity" data-id="{{ document.id }}"
+                    data-kind="{{ document.kind }}" data-path="{{ document.file.url }}">
+                    <div class="folder-item d-inline-flex justify-content-between align-items-center">
+                        <i class="bi bi-file-text-fill"></i>
+                        <h6>{{ document.title }}</h6>
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="alert-text text-center mt-5">Nothing to show.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

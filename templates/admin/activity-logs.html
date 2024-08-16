@@ -1,0 +1,137 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Logs - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Activity Logs</h1>
+    <p>All activities will be displayed here.</p>
+
+    <div class="card card-dashboard mb-5" id="newVersionTable">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="myTable" class="display w-100">
+                    <thead>
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Activity</th>
+                            <th>Timestamp</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in activity_logs %}
+                        <tr class="log">
+                            <th>{{ log.id }}</th>
+                            <td>{{ log.text }}</td>
+                            <td>{{ log.created_at }}</td>
+                            <td>
+                                <button class="accept-button view-button" data-id="{{ log.id }}" data-user-id="{{ log.user.id }}" data-user-name="{{ log.user.name }}" data-kind="{{ log.kind }}" data-type-id="{{ log.type_id }}" data-status="{{ log.status}}" data-time="{{ log.created_at }}" data-text="{{ log.text }}">View</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn submit-button mt-3" id="downloadBtn">Download</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal report-modal" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Activity Details</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="logId">LOG ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logId" disabled>
+                        </div>
+                        <div class="col-lg-7">
+                            <label for="logUser">USER ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logUser" disabled>
+                        </div>
+                        <div class="col-lg-5">
+                            <label for="logName">NAME</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logName" disabled>
+                        </div>
+                        <div class="col-lg-4" id="kindId">
+                            <label for="logKind">KIND</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logKind" disabled>
+                        </div>
+                        <div class="col-lg-8" id="checkId">
+                            <label for="logTypeId">ID</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logTypeId" disabled>
+                        </div>
+                        <div class="col-lg-12" id="statusId">
+                            <label for="logStatus">STATUS</label>
+                            <input class="form-control folder-form-input" type="text" autocomplete="off" id="logStatus" disabled>
+                        </div>
+                        <div class="col-lg-12">
+                            <label for="reportTextInput">ACTIVITY</label>
+                            <textarea class="form-control folder-form-input" id="reportTextInput" rows="1"
+                            disabled></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $('.view-button').click(function () {
+            $('.report-modal').modal('show');
+            var text = $(this).data('text')
+            $('#logId').val($(this).data('id'));
+            $('#logUser').val($(this).data('user-id'));
+            $('#logName').val($(this).data('user-name'));
+            $('#logKind').val($(this).data('kind'));
+            if ($(this).data('type-id') === 'None') {
+                $('#checkId').addClass('hide');
+                $('#kindId').removeClass('col-lg-4').addClass('col-lg-6');
+                $('#statusId').removeClass('col-lg-12').addClass('col-lg-6');
+            } else {
+                $('#checkId').removeClass('hide');
+                $('#kindId').removeClass('col-lg-6').addClass('col-lg-4');
+                $('#statusId').removeClass('col-lg-6').addClass('col-lg-12');
+            }
+            $('#logTypeId').val($(this).data('type-id'));
+            $('#logStatus').val($(this).data('status'));
+            $('#reportTextInput').val(text);
+        });
+
+        $('#downloadBtn').click(function () {
+            $('.download-modal').modal('show');
+        });
+
+        $('#submitDownloadBtn').click(function (e) {
+            e.preventDefault();
+
+            var data = {
+                'startDate': $('#startDate1').val(),
+                'endDate': $('#endDate').val()
+            }
+
+            $.ajax({
+                url: '/activity-logs/download',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log(response)
+                }
+            })
+        })
+    })
+</script>
+{% endblock %}

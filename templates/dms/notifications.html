@@ -1,0 +1,56 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Notifications - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Notifications</h1>
+    <p>Notifications about your folders are displayed here.</p>
+
+    {% for notification in unread_notifications %}
+    <div class="alert alert-success d-flex notification" role="alert" data-id="{{ notification.id }}">
+        <div class="col-10">
+            <span>{{ notification.text }}</span>
+        </div>
+        <div class="col-2 text-right" id="timestamp">
+            <span>{{ notification.created_at }}</span>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for notification in notifications %}
+    <div class="alert alert-secondary d-flex notification" role="alert" data-id="{{ notification.id }}">
+        <div class="col-10">
+            <span>{{ notification.text }}</span>
+        </div>
+        <div class="col-2 text-right" id="timestamp">
+            <span>{{ notification.created_at }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    $(document).ready(function () {
+        const url = `${window.location.protocol}//${window.location.host}`;
+
+        data = {
+            'isRead': 'True'
+        }
+        $.ajax({
+            url: '/notifications',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            data: JSON.stringify(data)
+        });
+
+        $('.notification').click(function () {
+            var id = $(this).data('id');
+
+            window.location.href = `${url}/notification/${id}`;
+        });
+    });
+</script>
+{% endblock content %}

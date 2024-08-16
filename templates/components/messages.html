@@ -1,0 +1,24 @@
+{% for message in messages %}
+<div class="container mt-3" id="alerta">
+    <div id="alerts-container">
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}"
+            role="alert" id="messages">
+            {{ message }}
+        </div>
+    </div>
+</div>
+
+<!--------- Messages Script ---------->
+<script>
+    window.onload = function () {
+        // Remove the message after 5 seconds
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function (alert) {
+            setTimeout(function () {
+                alert.remove();
+            }, 5000);
+        });
+    };
+</script>
+<!--------- End Messages Script ---------->
+{% endfor %}

@@ -1,0 +1,174 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Profile - OCRVault{% endblock title %}
+
+{% block content %}
+<div class="container main-container">
+    <h1 class="mt-4">Profile</h1>
+    <p>Your profile information is shown here.</p>
+
+    {% include 'components/messages.html' %}
+
+    <div class="card card-dashboard mb-3" id="newUser">
+        <div class="card-body">
+            <form action="{% url 'profile' %}" method="post" id="profileForm">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-12 text-end">
+                        <p class="error-one">Fields with * can be edited.</p>
+                    </div>
+                    <div class="col-lg-12">
+                        <label for="userId">ID</label>
+                        <input class="form-control add-user folder-form-input" placeholder="User ID" id="userId"
+                            value="{{ user.id }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="email">EMAIL *</label>
+                        {% if form.email.errors %}
+                        <span class="error-two" id="errorOne">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            {% for error in form.email.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </span>
+                        {% endif %}
+                        <input type="email" class="form-control add-user folder-form-input {% if form.email.errors %}error{% endif %}" placeholder="Email" id="email"
+                            value="{{ user.email }}" name="email" autocomplete="off">
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="name">FULL NAME *</label>
+                        {% if form.name.errors %}
+                        <span class="error-two"id="errorTwo">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            {% for error in form.name.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </span>
+                        {% endif %}
+                        <input type="text" class="form-control add-user folder-form-input {% if form.name.errors %}error{% endif %}" placeholder="Full Name" id="name"
+                            value="{{ user.name }}" name="name" autocomplete="off">
+                    </div>
+                    <div class="col-lg-12">
+                        <label for="password">PASSWORD <span id="changePass">Change Password?</span></label>
+                        <input type="password" class="form-control add-user folder-form-input" value="********"
+                            id="password" autocomplete="off" disabled>
+                    </div>
+                    <div class="col-lg-12">
+                        <label for="role">ROLE</label>
+                        <input class="form-control add-user folder-form-input" placeholder="Role" id="role"
+                            value="{{ user.user_type }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="dateJoined">DATE JOINED</label>
+                        <input type="text" class="form-control add-user folder-form-input" placeholder="Date Joined"
+                            id="dateJoined" value="{{ user.date_joined }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="lastLogin">LAST LOGIN</label>
+                        <input type="text" class="form-control add-user folder-form-input" placeholder="Last Login"
+                            id="lastLogin" value="{{ user.last_login }}" disabled>
+                    </div>
+                </div>
+                
+                <button class="btn submit-button hide">SAVE</button> 
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal delete-modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle"></h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <p class="report-text">
+                        Are you sure you want to change your email? If you are sure, you will have to verify your email again.
+                    </p>
+                    <div class="d-flex justify-content-between folder-settings mb-3">
+                        <button class="cancel-button" data-dismiss="modal" aria-label="Close">CANCEL
+                        </button>
+                        <button class="confirm-button" id="confirmBtn" type="submit">CONFIRM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var currentEmail = $('#email').val();
+        var currentName = $('#name').val();
+
+        function toggleSubmitButton() {
+            var newEmail = $('#email').val();
+            var newName = $('#name').val();
+
+            if (currentEmail === newEmail && currentName === newName) {
+                $('.submit-button').addClass('hide');
+            } else {
+                $('.submit-button').removeClass('hide');
+            }
+        }
+
+        $('#email').on('focus', function () {
+            $(this).removeClass('error');
+            $('#errorOne').addClass('hide');
+        });
+
+        $('#name').on('focus', function () {
+            $(this).removeClass('error');
+            $('#errorTwo').addClass('hide');
+        });
+
+        $('#email').on('input', toggleSubmitButton);
+
+        $('#name').on('input', function () {
+            var value = $(this).val();
+
+            function capitalize(str) {
+                return str.replace(/\b\w/g, function (char) {
+                    return char.toUpperCase();
+                });
+            }
+
+            var newValue = capitalize(value);
+
+            $(this).val(newValue);
+
+            toggleSubmitButton();
+        });
+
+        // $('#profileForm').on('submit', function () {
+        //     $('.submit-button').prop('disabled', true).text('PLEASE WAIT...');
+        // })
+
+        $('.submit-button').click(function (event) {
+            event.preventDefault();
+
+            if (currentEmail === $('#email').val()) {
+                $('#profileForm').submit();
+
+                $(this).prop('disabled', true).text('PLEASE WAIT...');
+            } else {
+                $('.delete-modal').modal('show');
+            }
+        });
+
+        $('.cancel-button').click(function () {
+            $('.delete-modal').modal('hide');
+        })
+
+        $('#confirmBtn').click(function () {
+            $(this).prop('disabled', true).text('PLEASE WAIT...');
+
+            $('#profileForm').submit();
+        });
+    });
+</script>
+{% endblock %}

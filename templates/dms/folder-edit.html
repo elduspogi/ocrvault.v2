@@ -1,0 +1,549 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block title %}{{ folder.name }} - OCRVault{% endblock title %}
+
+{% block content %}
+<h1 class="mt-4"><span class="folder-type">{{ folder.type }}</span> {{ folder.kind }}</h1>
+<p id="folderTitle">{{ folder.name }}</p>
+
+<button class="go-back"><i class="bi bi-arrow-left"></i> Go back</button>
+
+{% include 'components/messages.html' %}
+
+<div class="card card-dashboard mb-3" id="newUser">
+    <div class="card-body">
+        <div class="container">
+            <div class="container details-container">
+                <div class="row mb-3">
+                    <input type="hidden" id="appUrl" value="{{ app_url }}">
+                    <div class="col-lg-6">
+                        <label for="id">ID</label>
+                        <input class="form-control add-user folder-form-input" id="id"
+                            value="{{ folder.id }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="name">NAME</label>
+                        <input class="form-control add-user folder-form-input" id="name"
+                            value="{{ folder.name }}" autocomplete="off" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="type">TYPE</label>
+                        <input class="form-control add-user folder-form-input" id="type"
+                            value="{{ folder.type }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="kind">KIND</label>
+                        <input class="form-control add-user folder-form-input" id="kind"
+                            value="{{ folder.kind }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="owner">OWNER</label>
+                        <input class="form-control add-user folder-form-input" id="owner"
+                            value="{% if folder.created_by == request.user %}You{% else %}{{ folder.created_by.name }}{% endif %}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="dateCreated">DATE CREATED</label>
+                        <input class="form-control add-user folder-form-input" id="dateCreated"
+                            value="{{ folder.created_at }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="lastModified">LAST MODIFIED</label>
+                        <input class="form-control add-user folder-form-input" id="lastModified"
+                            value="{{ folder.updated_at }}" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="modifiedBy">MODIFIED BY</label>
+                        <input class="form-control add-user folder-form-input" id="modifiedBy"
+                            value="{% if folder.updated_by == request.user %}You{% else %}{{ folder.updated_by.name }}{% endif %}" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between folder-settings">
+                <button class="open-button" id="openBtn">
+                    <i class="bi bi-folder2-open"></i> <span>Open</span>
+                </button>
+                {% if is_folder_starred %}
+                <button class="open-button" id="unstarBtn">
+                    <i class="bi bi-star-fill"></i> <span>Remove from starred</span>
+                </button>
+                {% else %}
+                <button class="open-button" id="starBtn">
+                    <i class="bi bi-star"></i> <span>Add to starred</span>
+                </button>
+                {% endif %}
+            </div>
+            <div class="d-flex justify-content-between folder-settings">
+                <button class="edit-button" id="editBtn">
+                    <i class="bi bi-pencil-square"></i> <span>Edit</span>
+                </button>
+                {% if request.user == folder.created_by and folder.type == 'PRIVATE' %}
+                <button class="edit-button" id="manageBtn">
+                    <i class="bi bi-universal-access"></i> <span>Manage</span>
+                </button>
+                {% endif %}
+                {% if not folder.created_by == request.user %}
+                <button class="delete-button" id="reportBtn">
+                    <i class="bi bi-flag"></i> <span>Report</span>
+                </button>
+                {% else %}
+                <button class="delete-button" id="deleteBtn">
+                    <i class="bi bi-trash-fill"></i> <span>Delete</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal edit-modal" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Edit Folder</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <form class="edit-send-form">
+                    {% csrf_token %}
+                    <div class="container">
+                        <input class="form-control folder-form-input" type="text" placeholder="Name" name="name"
+                            id="newFolderFormInput" value="{{ folder.name }}" autocomplete="off">
+                        <select name="type" class="form-select folder-form-input mb-3">
+                            {% if folder.type == 'PUBLIC' %}
+                            <option value="PUBLIC" selected>PUBLIC</option>
+                            {% if folder.created_by == request.user %}
+                            <option value="PRIVATE">PRIVATE</option>
+                            {% endif %}
+                            {% else %}
+                            {% if folder.created_by == request.user %}
+                            <option value="PUBLIC">PUBLIC</option>
+                            {% endif %}
+                            <option value="PRIVATE" selected>PRIVATE</option>
+                            {% endif %}
+                        </select>
+                        <button type="submit" class="btn submit-button mb-2 mt-3" id="editBtn">SAVE CHANGES</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal delete-modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Delete {{ folder.name }}</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <p class="report-text">
+                        Are you sure you want to delete this folder? This is irreversible.
+                    </p>
+                    <form class="delete-send-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="id">
+                        <input type="hidden" name="delete">
+                        <div class="d-flex justify-content-between folder-settings mb-3">
+                            <button class="cancel-button" data-dismiss="modal" aria-label="Close">CANCEL
+                            </button>
+                            <button class="confirm-button delete-confirm-button" type="submit">CONFIRM
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal report-modal" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Report A Problem</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container delete-form">
+                    <p class="report-text">You are reporting this folder to the administrators. Your name and account
+                        information will be
+                        automatically included in your report.</p>
+                    <select name="type" id="reportType" class="form-select folder-form-input">
+                        <option value="It's inappropriate" selected>It's inappropriate</option>
+                        <option value="Nudity or sexual activity">Nudity or sexual activity</option>
+                        <option value="False Information">False Information</option>
+                        <option value="Scam or fraud">Scam or fraud</option>
+                        <option value="Intellectual property violations">Intellectual property violations</option>
+                        <option value="Others">Others</option>
+                    </select>
+
+                    <textarea class="form-control folder-form-input"
+                        placeholder="You can specify your report here. (Optional)" id="reportTextInput"
+                        name="details" rows="1"></textarea>
+                    <div class="d-flex justify-content-between folder-settings mb-3">
+                        <button class="cancel-button" data-dismiss="modal" aria-label="Close">CANCEL
+                        </button>
+                        <button class="confirm-button report-submit-button" type="submit">SUBMIT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal manage-modal" id="manageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="folderModalTitle">Manage Access</h1>
+                <i class="bi bi-x-lg" data-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="myTable" class="display">
+                                    <thead>
+                                        <tr>
+                                            <th>Id</th>
+                                            <th>Name</th>
+                                            <th>Email Address</th>
+                                            <th>Role</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in users %}
+                                        <tr class="user-row {% if user in allowed_users %}file-selected{% endif %}"
+                                            data-email="{{ user.email }}" data-id="{{ user.id }}">
+                                            <th>{{ user.id }}</th>
+                                            <td>{{ user.name }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.user_type }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-container d-flex align-items-center">
+                    {% for user in allowed_users %}
+                    <div class="chosen-user" data-email="{{ user.email }}" data-id="{{ user.id }}">{{ user.email }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-end align-items-end folder-settings access-buttons hide">
+                    <button class="copy-button">Copy Link</button>
+                    <button class="save-button">Give Access</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = $('meta[name=csrf-token]').attr('content');
+        const url = `${window.location.protocol}//${window.location.host}`;
+        var isPrivate = '{{ folder.type }}' === 'PRIVATE';
+        var folderId = '{{ folder.id }}';
+        var parentId = '{{ folder.parent.id }}';
+        var currentFolderName = $('#newFolderFormInput').val();
+
+        $('.cancel-button').click(function (e) {
+            e.preventDefault();
+
+            $('.modal').modal('hide');
+
+            $('#folderName').text(currentFolderName);
+            $('#folderTitle').text(currentFolderName);
+            $('#newFolderFormInput').val(currentFolderName);
+        })
+
+        if (isPrivate) {
+            $('#folderCheckbox').attr('checked', 'checked');
+            $('#folderValue').val('PRIVATE');
+        }
+
+        $('#newFolderFormInput').on('input', function () {
+            var value = $(this).val();
+
+            if (value === '') {
+                value = 'Untitled Folder';
+            }
+
+            $(this).val(value);
+        });
+
+        $('#folderCheckbox').on('change', function () {
+            var value = $(this).val();
+            if ($(this).is(':checked')) {
+                $('#folderValue').val('PRIVATE');
+            } else {
+                $('#folderValue').val('PUBLIC');
+            }
+        });
+
+        $('.bi-x-lg').on('click', function () {
+            $('.modal').modal('hide');
+            $('#folderName').text(currentFolderName);
+            $('#folderTitle').text(currentFolderName);
+            $('#newFolderFormInput').val(currentFolderName);
+        });
+
+        $('#editBtn').on('click', function () {
+            $('.edit-modal').modal('show');
+        });
+
+        $('#manageBtn').on('click', function () {
+            $('.manage-modal').modal('show');
+        });
+
+        var selectedId = [];
+
+        if ($('.user-row').hasClass('file-selected')) {
+            $('.user-row.file-selected').each(function () {
+                var userId = $(this).data('id');
+                selectedId.push(userId);
+            })
+        }
+
+        if (selectedId.length > 0) {
+            $('.access-buttons').removeClass('hide');
+        }
+
+        $('.user-row').on('click', function () {
+            $(this).toggleClass('file-selected');
+
+            var userId = $(this).data('id');
+
+            if ($(this).hasClass('file-selected')) {
+                selectedId.push(userId);
+                data = {
+                    'selectedId': userId,
+                    'folderId': '{{ folder.id }}'
+                }
+                $.ajax({
+                    url: '/add-access',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        console.log(response);
+                    }
+                });
+            } else {
+                selectedId.pop(userId);
+                data = {
+                    'selectedId': userId,
+                    'folderId': '{{ folder.id }}'
+                }
+                $.ajax({
+                    url: '/remove-access',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: JSON.stringify(data)
+                });
+            }
+
+            if (selectedId.length > 0) {
+                $('.access-buttons').removeClass('hide');
+            } else {
+                $('.access-buttons').addClass('hide');
+            }
+
+            var email = $(this).data('email');
+
+            var existingChosenUser = $('.chosen-user[data-email="' + email + '"]');
+
+            // if (existingChosenUser.length === 0) {
+            //     var newChosenUser = $('<div class="chosen-user" data-email="' + email + '" data-id="' + userId + '">' + email + '</div>');
+
+            //     $('.user-container').append(newChosenUser);
+            // } else {
+            //     existingChosenUser.remove();
+            // }
+        });
+
+        $(document).on('click', '.chosen-user', function () {
+            var email = $(this).data('email');
+            var userId = $(this).data('id');
+            $('.user-row[data-email="' + email + '"]').removeClass('file-selected');
+
+            data = {
+                'selectedIds': userId,
+                'folderId': '{{ folder.id }}'
+            }
+            $.ajax({
+                url: '/remove-access',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify(data)
+            });
+
+            $(this).remove();
+        })
+
+        $('.save-button').on('click', function () {
+            var data = {
+                'selectedIds': selectedId,
+                'folderId': '{{ folder.id }}'
+            }
+            
+            $.ajax({
+                url: '/add-access',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    location.reload();
+                }
+            })
+        });
+
+        $('#deleteBtn').on('click', function () {
+            $('.delete-modal').modal('show');
+        });
+
+        $('.edit-send-form').on('submit', function (event) {
+            event.preventDefault();
+
+            $('#editBtn').prop('disabled', true).text('PLEASE WAIT...');
+
+            $.ajax({
+                url: '/edit/folder/' + folderId,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    location.reload();
+                }
+            });
+        });
+
+        $('.delete-confirm-button').on('click', function (e) {
+            e.preventDefault();
+
+            $(this).prop('disabled', true).text('PLEASE WAIT...');
+
+            $.ajax({
+                url: '/delete/folder/' + folderId,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                success: function (response) {
+                    if (parentId === '') {
+                        window.location.href = `${url}/home`;
+                    } else {
+                        window.location.href = `${url}/folder/` + parentId;
+                    }
+                }
+            });
+        });
+
+        $('.report-submit-button').click(function () {
+            var type = $('#reportType').val();
+            var details = $('#reportTextInput').val();
+            var kind = '{{ folder.kind }}';
+
+            var data = {
+                'id': folderId,
+                'kind': kind,
+                'type': type,
+                'details': details
+            }
+            $.ajax({
+                url: '/report',
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    location.reload();
+                }
+            })
+        })
+
+        $('.go-back').on('click', function () {
+            if (parentId === '') {
+                window.location.href = `${url}/home`;
+            } else {
+                window.location.href = `${url}/folder/${parentId}`;
+            }
+        });
+
+        $('#openBtn').on('click', function () {
+            window.location.href = `${url}/folder/${folderId}`;
+        });
+
+        $('#starBtn').on('click', function () {
+            var folderId = '{{ folder.id }}';
+            data = {
+                'folderId': folderId,
+            }
+
+            $.ajax({
+                url: '/starred/add/folder',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    location.reload();
+                }
+            })
+        });
+
+        $('#unstarBtn').on('click', function () {
+            var folderId = '{{ folder.id }}';
+            data = {
+                'folderId': folderId,
+            }
+
+            $.ajax({
+                url: '/starred/remove/folder',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: JSON.stringify(data),
+                success: function (response) {
+                    location.reload();
+                }
+            })
+        });
+
+        $('#reportBtn').click(function () {
+            $('.report-modal').modal('show');
+        });
+
+        $('.copy-button').on('click', function () {
+            var appUrl = $('#appUrl').val();
+            var eme_id = $('#id').val();
+            var finalUrl = appUrl + '/folder/' + eme_id;
+            var input = $('<input>');
+            navigator.clipboard.writeText(finalUrl);
+            $(this).text('Link Copied');
+        });
+    });
+</script>
+{% endblock content %}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activity Logs</title>
+<style>
+    @page {
+        size: a4 portrait;
+        margin: 2cm;
+    }
+    table{
+        border: 1px solid black;
+    }
+    h1 {
+        text-align: center;
+    }
+    #noRecord {
+        text-align: center;
+    }
+    header img {
+            height: 50px;
+    }
+</style>
+</head>
+<body>
+    <header>
+        <img src="static/images/favicon.png" alt="" >
+        <img src="static/images/favicon.png" alt="" >
+    </header>
+    <h1>Admin Activity</h1>
+
+    {% if activity_logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>LOG ID</th>
+                <th>ACTIVITY</th>
+                <th>User</th>
+                <th>KIND</th>
+                <th>ID</th>
+                <th>STATUS</th>
+                <th>TIMESTAMP</th>
+            </tr>            
+        </thead>
+
+        <tbody>
+            {% for log in activity_logs %}
+                <tr>
+                    <td>{{ log.id }}</td>
+                    <td>{{ log.text }}</td>
+                    <td>{{ log.user.name }}</td>
+                    <td>{{ log.type }}</td>
+                    <td>{{ log.type_id }}</td>
+                    <td>{{ log.status }}</td>
+                    <td>{{ log.created_at }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p id="noRecord">No current records.</p>
+    {% endif %}
+
+    <div>
+        <p>Downloaded By: {{ user.name }}</p>
+        <p>Downloaded At: {{ download_time }}</p>
+    </div>
+</body>
+</html>

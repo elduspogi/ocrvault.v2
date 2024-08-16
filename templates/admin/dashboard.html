@@ -1,0 +1,264 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Dashboard - OCRVault{% endblock title %}
+
+{% block content %}
+<h1 class="mt-4">Dashboard</h1>
+<p>Welcome, Juan Dela Cruz!</p>
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card table-card mb-4">
+            <div class="card-above card-body d-flex justify-content-end">
+                <div class="card-content purecounter" data-purecounter-start="0" data-purecounter-end="{{ documents }}">
+                    {{ documents }}
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Documents
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card table-card mb-4">
+            <div class="card-above card-body d-flex justify-content-end">
+                <div class="card-content purecounter" data-purecounter-start="0" data-purecounter-end="{{ folders }}">
+                    {{ folders }}
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Folders
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card table-card mb-4">
+            <div class="card-above card-body d-flex justify-content-end">
+                <div class="card-content purecounter" data-purecounter-start="0" data-purecounter-end="{{ users }}">
+                    {{ users }}
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Verified Users
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card table-card mb-4">
+            <div class="card-above card-body d-flex justify-content-end">
+                <div class="card-content purecounter" data-purecounter-start="0"
+                    data-purecounter-end="{{ documents_extracted }}">
+                    {{ documents_extracted }}
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Documents Extracted
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card chart-card mb-4">
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Public and Private Folders
+            </div>
+            <div class="card-body d-flex justify-content-center">
+                <canvas id="folderChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card chart-card mb-4">
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Top Uploaders
+            </div>
+            <div class="card-body d-flex justify-content-center">
+                <canvas id="userChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-12 col-md-12">
+        <div class="card chart-card mb-4">
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Monthly Chart
+            </div>
+            <div class="card-body d-flex justify-content-center">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-6 col-md-12">
+        <div class="card chart-card mb-4">
+            <div class="card-footer d-flex align-items-center card-bottom">
+                Most Altered Documents
+            </div>
+            <div class="card-body d-flex justify-content-center">
+                <canvas id="alteredChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var documentList = {{ document_list| safe }};
+    var topUsers = {{ top_users| safe }};
+    var topCounts = {{ top_counts| safe}};
+    var docLabel = {{ most_doc_name| safe }};
+    var docVersion = {{ most_doc_version| safe }};
+    var monthCounts = {};
+    
+    documentList.forEach(function (dateString) {
+        var date = new Date(dateString);
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var monthYear = year + '-' + (month < 10 ? '0' + month : month);
+
+        if (!monthCounts[monthYear]) {
+            monthCounts[monthYear] = 0;
+        }
+
+        monthCounts[monthYear]++;
+    });
+
+    var monthNames = [];
+
+    $(document).ready(function () {
+        const fChart = $('#folderChart');
+
+        new Chart(fChart, {
+            type: 'pie',
+            data: {
+                labels: ['Public', 'Private'],
+                datasets: [{
+                    label: 'Total',
+                    data: ['{{ public_folders }}', '{{ private_folders }}'],
+                    backgroundColor: [
+                            'rgba(25, 135, 84, 0.9)',
+                            'rgba(255, 205, 86, 0.9)'
+                        ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const mChart = $('#monthlyChart');
+        const firstHalfMonth = ['January', 'February', 'March', 'April', 'May', 'June'];
+        const secondHalfMonth = ['July', 'August', 'September', 'October', 'November', 'December'];
+        const firstHalfData = new Array(6).fill(0);
+        const secondHalfData = new Array(6).fill(0);
+
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        for (let i = 0; i < 12; i++) {
+            const monthYear = `${new Date().getFullYear()}-${(i + 1).toString().padStart(2, '0')}`;
+            const count = monthCounts[monthYear] || 0;
+            const monthName = monthNames[i];
+
+            if (i < 6) {
+                firstHalfData[i] = count;
+            } else {
+                secondHalfData[i - 6] = count;
+            }
+        }
+
+        const monthIndex = new Date().getMonth();
+
+        const checkMonth = monthIndex < 6 ? firstHalfMonth : secondHalfMonth;
+        const checkData = monthIndex < 6 ? firstHalfData : secondHalfData;
+
+        new Chart(mChart, {
+            type: 'line',
+            data: {
+                labels: checkMonth,
+                datasets: [{
+                    label: 'No. of uploaded documents',
+                    data: checkData,
+                    backgroundColor: [
+                        'rgb(25, 135, 84)'
+                    ],
+                    borderWidth: 3,
+                    fill: false,
+                    borderColor: 'rgb(25, 135, 84)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const uChart = $('#userChart');
+
+        new Chart(uChart, {
+            type: 'doughnut',
+            data: {
+                labels: topUsers,
+                datasets: [{
+                    label: 'Total',
+                    data: topCounts,
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.9)',
+                        'rgba(104, 195, 163, 0.9)',
+                        'rgba(27, 163, 156, 0.9)',
+                        'rgba(210, 238, 130, 0.9)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        })
+
+        new PureCounter({
+            duration: 0.5,
+            once: true,
+            currency: false,
+        });
+
+        const aChart = $('#alteredChart');
+
+        new Chart(aChart, {
+            type: 'bar',
+            data: {
+                labels: docLabel,
+                datasets: [{
+                    label: 'No. of versions',
+                    data: docVersion,
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.9)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        })
+    });
+</script>
+{% endblock content %}
