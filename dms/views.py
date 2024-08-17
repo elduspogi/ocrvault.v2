@@ -1061,11 +1061,11 @@ def add_user(request):
 
             email = request.POST.get('email')
 
-            user_obj = User.objects.get(email=email)
-
-            if user_obj is not None:
-                form.add_error('email', 'Email address already exists.')
-            else:
+            try:
+                user_obj = User.objects.get(email=email)
+                if user_obj is not None:
+                    form.add_error('email', 'Email address already exists.')
+            except User.DoesNotExist:
                 user = User.objects.create(
                     email = email,
                     name = request.POST.get('name'),
