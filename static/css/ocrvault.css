@@ -12777,6 +12777,12 @@ td i:hover {
   text-decoration: underline;
 }
 
+.file-options {
+  text-decoration: none;
+  color: rgba(var(--bs-dark-rgb));
+  cursor: pointer;
+}
+
 #setTheme {
   cursor: pointer;
 }
