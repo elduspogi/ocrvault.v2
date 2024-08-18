@@ -164,4 +164,14 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        Dropzone.autoDiscover = false;
+
+        var myDropzone = new Dropzone('#dz', {
+            acceptedFiles: 'application/pdf, image/*'
+        });
+    });
+</script>
 {% endblock content %}

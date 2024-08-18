@@ -412,10 +412,4 @@ $(document).ready(function () {
     $('#refreshPage').click(function () {
         location.reload();
     });
-
-    Dropzone.autoDiscover = false;
-
-    var myDropzone = new Dropzone('#dz', {
-        acceptedFiles: 'application/pdf, image/*'
-    })
 });
